@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
-import { AlertCircle, Package, Search } from "lucide-react";
+import { AlertCircle, Package, Search, Edit2 } from "lucide-react";
 import { getAllProducts } from "../api";
+import TransactionModal from "../components/TransactionModal";
 
 export default function Inventory() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -25,7 +27,19 @@ export default function Inventory() {
     fetchProducts();
   }, []);
 
-  // Filter products based on search term
+  const handleTransactionSuccess = () => {
+    const fetchProducts = async () => {
+      try {
+        const response = await getAllProducts();
+        setProducts(response.data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchProducts();
+  };
+
+
   const filteredProducts = products.filter(
     (product) =>
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -47,7 +61,7 @@ export default function Inventory() {
 
   return (
     <div className="lg:ml-64 min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Header */}
+      
       <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-8">
         <h1 className="text-4xl font-bold">Inventory</h1>
         <p className="text-blue-100 mt-2">
@@ -55,7 +69,7 @@ export default function Inventory() {
         </p>
       </div>
 
-      {/* Main Content */}
+      
       <div className="p-8">
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -63,7 +77,7 @@ export default function Inventory() {
           </div>
         )}
 
-        {/* Search Bar */}
+        
         <div className="mb-6 bg-white rounded-lg shadow-lg p-4">
           <div className="flex items-center gap-3 bg-gray-50 rounded-lg px-4 py-3">
             <Search size={20} className="text-gray-400" />
@@ -77,11 +91,11 @@ export default function Inventory() {
           </div>
         </div>
 
-        {/* Products Table */}
+        
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              {/* Table Header */}
+              
               <thead className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
                 <tr>
                   <th className="px-6 py-4 text-left text-sm font-semibold">
@@ -102,10 +116,13 @@ export default function Inventory() {
                   <th className="px-6 py-4 text-center text-sm font-semibold">
                     Status
                   </th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold">
+                    Action
+                  </th>
                 </tr>
               </thead>
 
-              {/* Table Body */}
+              
               <tbody className="divide-y divide-gray-200">
                 {filteredProducts.length > 0 ? (
                   filteredProducts.map((product) => {
@@ -171,6 +188,21 @@ export default function Inventory() {
                             </span>
                           )}
                         </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                          <button
+                            onClick={() =>
+                              setSelectedProduct({
+                                id: product._id,
+                                name: product.name,
+                                quantity: product.quantity,
+                              })
+                            }
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 font-semibold rounded-lg hover:bg-blue-100 transition-colors duration-200"
+                          >
+                            <Edit2 size={16} />
+                            Update Stock
+                          </button>
+                        </td>
                       </tr>
                     );
                   })
@@ -192,7 +224,7 @@ export default function Inventory() {
             </table>
           </div>
 
-          {/* Table Footer */}
+          
           <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
             <p className="text-sm text-gray-600">
               Showing{" "}
@@ -203,6 +235,17 @@ export default function Inventory() {
           </div>
         </div>
       </div>
+
+      
+      {selectedProduct && (
+        <TransactionModal
+          productId={selectedProduct.id}
+          productName={selectedProduct.name}
+          currentQuantity={selectedProduct.quantity}
+          onClose={() => setSelectedProduct(null)}
+          onSuccess={handleTransactionSuccess}
+        />
+      )}
     </div>
   );
 }
