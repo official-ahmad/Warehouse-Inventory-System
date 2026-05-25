@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "push": "git add . && git commit -m \"Updated Front-End\" && git push"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.0",
@@ -15,8 +16,8 @@
     "lucide-react": "^1.16.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "react-router-dom": "^7.15.1",
-    "script": "git add. && git commit -m 'Updated Front-End' && git push"
+    "react-hot-toast": "^2.6.0",
+    "react-router-dom": "^7.15.1"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",

@@ -1,14 +1,17 @@
-import { useState, useCallback } from "react";
+import { useState, useRef } from "react";
 import { ArrowLeft, Plus, CheckCircle, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { addProduct } from "../api";
+import { useToast } from "../context/ToastContext";
 
 export default function AddProduct() {
   const navigate = useNavigate();
+  const { addToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
-  const [formData, setFormData] = useState({
+
+  const formRef = useRef({
     name: "",
     description: "",
     SKU: "",
@@ -28,25 +31,17 @@ export default function AddProduct() {
     "Other",
   ];
 
-  const handleChange = useCallback((e) => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  }, []);
+    formRef.current[name] = value;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
 
-    if (
-      !formData.name ||
-      !formData.SKU ||
-      !formData.category ||
-      !formData.quantity ||
-      !formData.price
-    ) {
+    const data = formRef.current;
+    if (!data.name || !data.SKU || !data.category || !data.quantity || !data.price) {
       setError("Please fill in all required fields");
       return;
     }
@@ -54,210 +49,187 @@ export default function AddProduct() {
     try {
       setLoading(true);
       await addProduct({
-        ...formData,
-        quantity: parseInt(formData.quantity),
-        price: parseFloat(formData.price),
-        lowStockThreshold: parseInt(formData.lowStockThreshold),
+        ...data,
+        quantity: parseInt(data.quantity),
+        price: parseFloat(data.price),
+        lowStockThreshold: parseInt(data.lowStockThreshold),
       });
 
       setSuccess(true);
+      addToast("Product added successfully!", "success", 2000);
       setTimeout(() => {
         navigate("/inventory");
-      }, 2000);
+      }, 1500);
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to add product");
-      console.error(err);
+      const errMsg = err.response?.data?.error || "Failed to add product";
+      setError(errMsg);
+      addToast(errMsg, "error", 3000);
     } finally {
       setLoading(false);
     }
   };
 
-  const InputField = ({ label, name, type = "text", placeholder, required, step }) => (
-    <div className="mb-6">
-      <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
-        {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
-      </label>
-      <input
-        type={type}
-        name={name}
-        value={formData[name]}
-        onChange={handleChange}
-        placeholder={placeholder}
-        step={step}
-        className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-all duration-300 text-gray-800 font-medium hover:border-gray-300 shadow-sm"
-      />
-    </div>
-  );
-
-  const SelectField = ({ label, name, options, required }) => (
-    <div className="mb-6">
-      <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
-        {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
-      </label>
-      <select
-        name={name}
-        value={formData[name]}
-        onChange={handleChange}
-        className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-all duration-300 text-gray-800 font-medium bg-white hover:border-gray-300 shadow-sm"
-      >
-        <option value="">Select {label.toLowerCase()}</option>
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-
   return (
-    <div className="lg:ml-64 min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
-      
-      <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-purple-700 text-white p-8 border-b-4 border-blue-400 shadow-2xl">
+    <div className="lg:ml-64 min-h-screen bg-gray-50">
+      <div className="bg-white border-b border-gray-100 p-4 md:p-8">
         <button
           onClick={() => navigate("/inventory")}
-          className="flex items-center gap-2 text-blue-100 hover:text-white mb-6 transition-all duration-300 hover:gap-3"
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors mb-4"
         >
-          <ArrowLeft size={20} />
-          <span className="font-semibold">Back to Inventory</span>
+          <ArrowLeft size={20} className="text-gray-600" />
         </button>
-        <h1 className="text-4xl font-black">Add New Product</h1>
-        <p className="text-blue-100 mt-2 text-lg">
-          Create a new product entry in your warehouse
-        </p>
+        <div>
+          <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">Add Product</h1>
+          <p className="text-gray-600 text-sm mt-1">Create a new product entry</p>
+        </div>
       </div>
 
-      
-      <div className="p-8">
-        
+      <div className="p-4 md:p-8">
         {success && (
-          <div className="mb-6 p-5 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl flex items-center gap-4 text-white animate-bounce shadow-2xl">
-            <CheckCircle size={28} className="flex-shrink-0" />
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
+            <CheckCircle size={20} className="text-green-600" />
             <div>
-              <p className="font-bold text-lg">Success!</p>
-              <p className="text-sm text-green-100">Product added successfully. Redirecting...</p>
+              <p className="font-medium text-green-900">Success!</p>
+              <p className="text-sm text-green-700">Product added. Redirecting...</p>
             </div>
           </div>
         )}
 
-        
         {error && (
-          <div className="mb-6 p-5 bg-gradient-to-r from-red-500 to-pink-600 rounded-2xl flex items-center gap-4 text-white shadow-2xl animate-pulse">
-            <AlertCircle size={28} className="flex-shrink-0" />
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
+            <AlertCircle size={20} className="text-red-600" />
             <div>
-              <p className="font-bold text-lg">Error!</p>
-              <p className="text-sm text-red-100">{error}</p>
+              <p className="font-medium text-red-900">Error!</p>
+              <p className="text-sm text-red-700">{error}</p>
             </div>
           </div>
         )}
 
-        
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border-t-8 border-blue-500 transform hover:shadow-3xl transition-all duration-300">
-            
-            <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-purple-700 p-8 flex items-center gap-4">
-              <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg">
-                <Plus size={28} className="text-blue-600" />
+        <div className="max-w-2xl">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Product Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    onChange={handleChange}
+                    placeholder="e.g., Laptop Computer"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    SKU <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="SKU"
+                    onChange={handleChange}
+                    placeholder="e.g., LAP-001"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  />
+                </div>
               </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Category <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="category"
+                    onChange={handleChange}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
+                  >
+                    <option value="">Select category</option>
+                    {categories.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Quantity <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    name="quantity"
+                    onChange={handleChange}
+                    placeholder="0"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Price per Unit <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    name="price"
+                    onChange={handleChange}
+                    placeholder="0.00"
+                    step="0.01"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Low Stock Threshold <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    name="lowStockThreshold"
+                    onChange={handleChange}
+                    placeholder="10"
+                    defaultValue="10"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  />
+                </div>
+              </div>
+
               <div>
-                <h2 className="text-3xl font-black text-white">Product Details</h2>
-                <p className="text-blue-100">Fill in the details below</p>
-              </div>
-            </div>
-
-            
-            <form onSubmit={handleSubmit} className="p-8">
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                <InputField
-                  label="Product Name"
-                  name="name"
-                  placeholder="e.g., Laptop Computer"
-                  required
-                />
-                <InputField
-                  label="SKU"
-                  name="SKU"
-                  placeholder="e.g., LAP-001"
-                  required
-                />
-              </div>
-
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                <SelectField
-                  label="Category"
-                  name="category"
-                  options={categories}
-                  required
-                />
-                <InputField
-                  label="Quantity"
-                  name="quantity"
-                  type="number"
-                  placeholder="0"
-                  required
-                />
-              </div>
-
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                <InputField
-                  label="Price per Unit"
-                  name="price"
-                  type="number"
-                  placeholder="0.00"
-                  required
-                  step="0.01"
-                />
-                <InputField
-                  label="Low Stock Threshold"
-                  name="lowStockThreshold"
-                  type="number"
-                  placeholder="10"
-                  required
-                />
-              </div>
-
-              
-              <div className="mb-8">
-                <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Description
                 </label>
                 <textarea
                   name="description"
-                  value={formData.description}
                   onChange={handleChange}
                   placeholder="Add product description (optional)"
-                  rows="5"
-                  className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-all duration-300 text-gray-800 font-medium resize-none hover:border-gray-300 shadow-sm"
+                  rows="4"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
                 />
               </div>
 
-              
-              <div className="flex gap-4 pt-6 border-t-2 border-gray-200">
+              <div className="flex gap-4 pt-4">
                 <button
                   type="button"
                   onClick={() => navigate("/inventory")}
-                  className="flex-1 px-6 py-4 border-2 border-gray-400 text-gray-800 font-bold rounded-xl hover:bg-gray-50 hover:border-gray-600 transition-all duration-300 text-lg uppercase tracking-wide"
+                  className="flex-1 px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-lg uppercase tracking-wide shadow-lg hover:shadow-2xl transform hover:scale-105"
+                  className="flex-1 px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {loading ? (
                     <>
-                      <div className="animate-spin w-6 h-6 border-3 border-white border-t-transparent rounded-full" />
+                      <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
                       Adding...
                     </>
                   ) : (
                     <>
-                      <Plus size={24} />
+                      <Plus size={18} />
                       Add Product
                     </>
                   )}

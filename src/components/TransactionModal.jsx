@@ -7,6 +7,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { createTransaction } from "../api";
+import { useToast } from "../context/ToastContext";
 
 export default function TransactionModal({
   productId,
@@ -15,6 +16,7 @@ export default function TransactionModal({
   onClose,
   onSuccess,
 }) {
+  const { addToast } = useToast();
   const [type, setType] = useState("IN");
   const [quantity, setQuantity] = useState("");
   const [loading, setLoading] = useState(false);
@@ -46,12 +48,19 @@ export default function TransactionModal({
       });
 
       setSuccess(true);
+      addToast(
+        `${type === "IN" ? "Stock added" : "Stock removed"} successfully!`,
+        "success",
+        2000
+      );
       setTimeout(() => {
         onSuccess?.();
         onClose();
       }, 1500);
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to create transaction");
+      const errMsg = err.response?.data?.error || "Failed to create transaction";
+      setError(errMsg);
+      addToast(errMsg, "error", 3000);
       console.error(err);
     } finally {
       setLoading(false);
