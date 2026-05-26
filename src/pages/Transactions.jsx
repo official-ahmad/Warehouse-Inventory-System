@@ -62,7 +62,9 @@ export default function Transactions() {
   return (
     <div className="lg:ml-64 min-h-screen bg-gray-50">
       <div className="bg-white border-b border-gray-100 p-4 md:p-8">
-        <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">Transactions History</h1>
+        <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">
+          Transactions History
+        </h1>
         <p className="text-gray-600 text-sm mt-1">
           Track all stock in and out movements.
         </p>
@@ -75,7 +77,6 @@ export default function Transactions() {
           </div>
         )}
 
-        
         <div className="mb-6 bg-white rounded-xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center gap-3 md:gap-4 flex-wrap">
             <Filter size={20} className="text-gray-600" />
@@ -137,8 +138,7 @@ export default function Transactions() {
                             </div>
                             <div className="min-w-0">
                               <p className="font-medium text-gray-900 truncate text-sm">
-                                {transaction.productId?.name ||
-                                  "Unknown Product"}
+                                {transaction.productId?.name || "N/A"}
                               </p>
                               <p className="text-xs text-gray-500">
                                 {transaction.productId?.SKU || "N/A"}
@@ -213,9 +213,7 @@ export default function Transactions() {
           <div className="bg-gray-50 px-4 md:px-6 py-3 border-t border-gray-100">
             <p className="text-xs md:text-sm text-gray-600">
               Showing{" "}
-              <span className="font-medium">
-                {filteredTransactions.length}
-              </span>{" "}
+              <span className="font-medium">{filteredTransactions.length}</span>{" "}
               of <span className="font-medium">{transactions.length}</span>{" "}
               transactions
             </p>
