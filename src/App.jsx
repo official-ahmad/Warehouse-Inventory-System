@@ -13,6 +13,8 @@ import Inventory from "./pages/Inventory";
 import AddProduct from "./pages/AddProduct";
 import Transactions from "./pages/Transactions";
 import ProductHistory from "./pages/ProductHistory";
+import Users from "./pages/Users";
+import ActivityLogs from "./pages/ActivityLogs";
 import Login from "./pages/Login";
 import "./App.css";
 import { Toaster } from "react-hot-toast";
@@ -39,6 +41,8 @@ function App() {
                         path="/product-history"
                         element={<ProductHistory />}
                       />
+                      <Route path="/users" element={<Users />} />
+                      <Route path="/activity-logs" element={<ActivityLogs />} />
                       <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
                   </div>

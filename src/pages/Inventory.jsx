@@ -1,7 +1,16 @@
 import { useEffect, useState } from "react";
-import { AlertCircle, Package, Search, Edit2, Trash2 } from "lucide-react";
+import {
+  AlertCircle,
+  Package,
+  Search,
+  Edit2,
+  Trash2,
+  Filter,
+  ChevronRight,
+  MoreHorizontal,
+} from "lucide-react";
 import { getAllProducts, deleteProduct } from "../api";
-import { useToast } from "../context/ToastContext";
+import toast from "react-hot-toast";
 import TransactionModal from "../components/TransactionModal";
 import DeleteConfirmModal from "../components/DeleteConfirmModal";
 
@@ -13,54 +22,33 @@ export default function Inventory() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [deleting, setDeleting] = useState(false);
-  const { addToast } = useToast();
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await getAllProducts();
+      setProducts(response.data);
+    } catch (err) {
+      setError(err.message || "Failed to fetch products");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        const response = await getAllProducts();
-        setProducts(response.data);
-      } catch (err) {
-        setError(err.message || "Failed to fetch products");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchProducts();
   }, []);
 
-  const handleTransactionSuccess = () => {
-    const fetchProducts = async () => {
-      try {
-        const response = await getAllProducts();
-        setProducts(response.data);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchProducts();
-  };
-
   const handleDeleteProduct = async () => {
     if (!deleteConfirm) return;
-
     try {
       setDeleting(true);
       await deleteProduct(deleteConfirm.id);
       setProducts(products.filter((p) => p._id !== deleteConfirm.id));
-      addToast(
-        `"${deleteConfirm.name}" deleted successfully!`,
-        "success",
-        2000
-      );
+      toast.success("Product removed from inventory");
       setDeleteConfirm(null);
     } catch (err) {
-      const errMsg = err.response?.data?.error || "Failed to delete product";
-      addToast(errMsg, "error", 3000);
-      console.error(err);
+      toast.error("Deletion failed");
     } finally {
       setDeleting(false);
     }
@@ -69,154 +57,180 @@ export default function Inventory() {
   const filteredProducts = products.filter(
     (product) =>
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.SKU.toLowerCase().includes(searchTerm.toLowerCase())
+      product.SKU.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   if (loading) {
     return (
-      <div className="lg:ml-64 min-h-screen bg-gray-50 p-4 md:p-8 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin mb-4">
-            <Package className="text-blue-600 mx-auto" size={48} />
-          </div>
-          <p className="text-gray-600">Loading...</p>
+      <div className="lg:ml-64 min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="animate-pulse flex flex-col items-center">
+          <Package size={40} className="text-slate-300 mb-2" />
+          <div className="h-2 w-24 bg-slate-200 rounded"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="lg:ml-64 min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-100 p-4 md:p-8">
-        <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">Inventory</h1>
-        <p className="text-gray-600 text-sm mt-1">Manage your warehouse products</p>
-      </div>
-
-      <div className="p-4 md:p-8">
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-700 text-sm">{error}</p>
+    <div className="lg:ml-64 min-h-screen bg-[#f8fafc]">
+      {/* Page Header */}
+      <div className="bg-white border-b border-slate-200 px-6 py-8 md:px-10">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+              Inventory Stock
+            </h1>
+            <p className="text-slate-500 text-sm font-medium">
+              Monitoring {products.length} unique items
+            </p>
           </div>
-        )}
 
-        <div className="mb-6 bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-          <div className="flex items-center gap-3 bg-gray-50 rounded-lg px-4 py-2.5">
-            <Search size={18} className="text-gray-400" />
+          {/* Search Bar - Integrated Design */}
+          <div className="relative w-full md:w-96 group">
+            <Search
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors"
+              size={18}
+            />
             <input
               type="text"
-              placeholder="Search by name or SKU..."
+              placeholder="Quick search by SKU or name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="flex-1 bg-transparent outline-none text-gray-700 placeholder-gray-400"
+              className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-medium text-slate-700"
             />
           </div>
         </div>
+      </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="p-6 md:p-10 max-w-7xl mx-auto">
+        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-100">
-                <tr>
-                  <th className="px-3 md:px-6 py-3 text-left text-xs md:text-sm font-medium text-gray-700">SKU</th>
-                  <th className="px-3 md:px-6 py-3 text-left text-xs md:text-sm font-medium text-gray-700">Product</th>
-                  <th className="px-3 md:px-6 py-3 text-left text-xs md:text-sm font-medium text-gray-700">Category</th>
-                  <th className="px-3 md:px-6 py-3 text-center text-xs md:text-sm font-medium text-gray-700">Qty</th>
-                  <th className="px-3 md:px-6 py-3 text-right text-xs md:text-sm font-medium text-gray-700">Price</th>
-                  <th className="px-3 md:px-6 py-3 text-center text-xs md:text-sm font-medium text-gray-700">Status</th>
-                  <th className="px-3 md:px-6 py-3 text-center text-xs md:text-sm font-medium text-gray-700">Action</th>
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50/50 border-b border-slate-100">
+                  <th className="px-6 py-5 text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                    Identification
+                  </th>
+                  <th className="px-6 py-5 text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                    Product Details
+                  </th>
+                  <th className="px-6 py-5 text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                    Category
+                  </th>
+                  <th className="px-6 py-5 text-[11px] font-bold text-slate-400 uppercase tracking-widest text-center">
+                    Stock Level
+                  </th>
+                  <th className="px-6 py-5 text-[11px] font-bold text-slate-400 uppercase tracking-widest text-right">
+                    Unit Price
+                  </th>
+                  <th className="px-6 py-5 text-[11px] font-bold text-slate-400 uppercase tracking-widest text-center">
+                    Actions
+                  </th>
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-gray-100">
-                {filteredProducts.length > 0 ? (
-                  filteredProducts.map((product) => {
-                    const isLowStock = product.quantity < product.lowStockThreshold;
-                    return (
-                      <tr key={product._id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-3 md:px-6 py-4">
-                          <span className="inline-block bg-blue-50 text-blue-700 px-2 md:px-3 py-1 rounded-full text-xs font-medium">
-                            {product.SKU}
+              <tbody className="divide-y divide-slate-100">
+                {filteredProducts.map((product) => {
+                  const isLow = product.quantity < product.lowStockThreshold;
+                  return (
+                    <tr
+                      key={product._id}
+                      className="group hover:bg-slate-50/80 transition-all duration-200"
+                    >
+                      <td className="px-6 py-5">
+                        <span className="font-mono text-xs font-bold px-2 py-1 bg-slate-100 text-slate-600 rounded-md border border-slate-200">
+                          {product.SKU}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="flex flex-col">
+                          <span className="font-bold text-slate-800 text-sm group-hover:text-blue-600 transition-colors">
+                            {product.name}
                           </span>
-                        </td>
-                        <td className="px-3 md:px-6 py-4">
-                          <p className="font-medium text-gray-900 text-sm">{product.name}</p>
-                          <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{product.description}</p>
-                        </td>
-                        <td className="px-3 md:px-6 py-4">
-                          <span className="text-xs md:text-sm text-gray-600">{product.category}</span>
-                        </td>
-                        <td className="px-3 md:px-6 py-4 text-center">
-                          <span className={`font-medium text-sm ${isLowStock ? "text-red-600" : "text-green-600"}`}>
-                            {product.quantity}
+                          <span className="text-[11px] text-slate-400 truncate max-w-[180px]">
+                            {product.description}
                           </span>
-                        </td>
-                        <td className="px-3 md:px-6 py-4 text-right">
-                          <span className="font-medium text-gray-900 text-sm">
-                            ${product.price.toFixed(2)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <span className="text-xs font-semibold text-slate-500 bg-slate-50 px-2 py-1 rounded-lg">
+                          {product.category}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5 text-center">
+                        <div className="flex flex-col items-center gap-1">
+                          <span
+                            className={`text-sm font-black ${isLow ? "text-rose-600" : "text-emerald-600"}`}
+                          >
+                            {product.quantity.toLocaleString()}
                           </span>
-                        </td>
-                        <td className="px-3 md:px-6 py-4 text-center">
-                          {isLowStock ? (
-                            <span className="inline-block bg-red-50 text-red-700 px-2 md:px-3 py-1 rounded-full text-xs font-medium">
-                              Low
-                            </span>
-                          ) : (
-                            <span className="inline-block bg-green-50 text-green-700 px-2 md:px-3 py-1 rounded-full text-xs font-medium">
-                              Good
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-3 md:px-6 py-4 text-center">
-                          <div className="flex gap-2 justify-center">
-                            <button
-                              onClick={() =>
-                                setSelectedProduct({
-                                  id: product._id,
-                                  name: product.name,
-                                  quantity: product.quantity,
-                                })
-                              }
-                              className="inline-flex items-center gap-1 px-2 md:px-3 py-1.5 bg-blue-50 text-blue-700 font-medium rounded-lg hover:bg-blue-100 transition-colors text-xs md:text-sm"
-                            >
-                              <Edit2 size={14} />
-                              <span className="hidden md:inline">Update</span>
-                              <span className="md:hidden">Edit</span>
-                            </button>
-                            <button
-                              onClick={() =>
-                                setDeleteConfirm({
-                                  id: product._id,
-                                  name: product.name,
-                                })
-                              }
-                              className="inline-flex items-center gap-1 px-2 md:px-3 py-1.5 bg-red-50 text-red-700 font-medium rounded-lg hover:bg-red-100 transition-colors text-xs md:text-sm"
-                            >
-                              <Trash2 size={14} />
-                              <span className="hidden md:inline">Delete</span>
-                              <span className="md:hidden">Del</span>
-                            </button>
+                          <div
+                            className={`h-1 w-8 rounded-full ${isLow ? "bg-rose-200" : "bg-emerald-200"}`}
+                          >
+                            <div
+                              className={`h-full rounded-full ${isLow ? "bg-rose-500" : "bg-emerald-500"}`}
+                              style={{ width: isLow ? "30%" : "100%" }}
+                            ></div>
                           </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan="7" className="px-3 md:px-6 py-12 text-center">
-                      <Package size={40} className="text-gray-300 mx-auto mb-3" />
-                      <p className="text-gray-500 text-sm">No products found</p>
-                    </td>
-                  </tr>
-                )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-5 text-right">
+                        <span className="font-bold text-slate-900">
+                          ${product.price.toFixed(2)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() =>
+                              setSelectedProduct({
+                                id: product._id,
+                                name: product.name,
+                                quantity: product.quantity,
+                              })
+                            }
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                            title="Update Stock"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                          <button
+                            onClick={() =>
+                              setDeleteConfirm({
+                                id: product._id,
+                                name: product.name,
+                              })
+                            }
+                            className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                            title="Delete"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
 
-          <div className="bg-gray-50 px-3 md:px-6 py-3 border-t border-gray-100">
-            <p className="text-xs md:text-sm text-gray-600">
-              <span className="font-medium">{filteredProducts.length}</span> of{" "}
-              <span className="font-medium">{products.length}</span> products
-            </p>
+          {/* Footer Pagination/Info */}
+          <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex justify-between items-center">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+              Showing {filteredProducts.length} Results
+            </span>
+            <div className="flex gap-2">
+              <button
+                className="p-2 bg-white border border-slate-200 rounded-lg disabled:opacity-50"
+                disabled
+              >
+                <ChevronRight className="rotate-180" size={16} />
+              </button>
+              <button className="p-2 bg-white border border-slate-200 rounded-lg">
+                <ChevronRight size={16} />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -227,7 +241,7 @@ export default function Inventory() {
           productName={selectedProduct.name}
           currentQuantity={selectedProduct.quantity}
           onClose={() => setSelectedProduct(null)}
-          onSuccess={handleTransactionSuccess}
+          onSuccess={fetchProducts}
         />
       )}
 

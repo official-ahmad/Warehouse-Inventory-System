@@ -1,15 +1,22 @@
 import { useState, useRef } from "react";
-import { ArrowLeft, Plus, CheckCircle, AlertCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  Plus,
+  CheckCircle,
+  AlertCircle,
+  PackagePlus,
+  Info,
+  DollarSign,
+  Boxes,
+  ShieldAlert,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { addProduct } from "../api";
-import { useToast } from "../context/ToastContext";
+import toast from "react-hot-toast";
 
 export default function AddProduct() {
   const navigate = useNavigate();
-  const { addToast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState(null);
 
   const formRef = useRef({
     name: "",
@@ -38,11 +45,16 @@ export default function AddProduct() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
-
     const data = formRef.current;
-    if (!data.name || !data.SKU || !data.category || !data.quantity || !data.price) {
-      setError("Please fill in all required fields");
+
+    if (
+      !data.name ||
+      !data.SKU ||
+      !data.category ||
+      !data.quantity ||
+      !data.price
+    ) {
+      toast.error("Please fill in all required fields!");
       return;
     }
 
@@ -55,188 +67,202 @@ export default function AddProduct() {
         lowStockThreshold: parseInt(data.lowStockThreshold),
       });
 
-      setSuccess(true);
-      addToast("Product added successfully!", "success", 2000);
-      setTimeout(() => {
-        navigate("/inventory");
-      }, 1500);
+      toast.success("Product successfully added to catalog!");
+      setTimeout(() => navigate("/inventory"), 1200);
     } catch (err) {
-      const errMsg = err.response?.data?.error || "Failed to add product";
-      setError(errMsg);
-      addToast(errMsg, "error", 3000);
+      toast.error(err.response?.data?.error || "Failed to add product");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="lg:ml-64 min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-100 p-4 md:p-8">
-        <button
-          onClick={() => navigate("/inventory")}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors mb-4"
-        >
-          <ArrowLeft size={20} className="text-gray-600" />
-        </button>
-        <div>
-          <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">Add Product</h1>
-          <p className="text-gray-600 text-sm mt-1">Create a new product entry</p>
+    <div className="lg:ml-64 min-h-screen bg-[#f8fafc]">
+      {/* Header Section */}
+      <div className="bg-white border-b border-slate-200 sticky top-0 z-10 px-6 py-6 md:px-10">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate("/inventory")}
+              className="p-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl transition-all border border-slate-200"
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                <PackagePlus className="text-blue-600" size={24} /> New Product
+              </h1>
+              <p className="text-slate-500 text-sm hidden md:block">
+                Catalog your warehouse items with precision
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="p-4 md:p-8">
-        {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
-            <CheckCircle size={20} className="text-green-600" />
-            <div>
-              <p className="font-medium text-green-900">Success!</p>
-              <p className="text-sm text-green-700">Product added. Redirecting...</p>
+      <div className="p-6 md:p-10">
+        <div className="max-w-4xl mx-auto">
+          <form
+            onSubmit={handleSubmit}
+            className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+          >
+            {/* Left Column: Main Details */}
+            <div className="lg:col-span-2 space-y-6">
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
+                <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                  <Info size={18} className="text-blue-500" /> Basic Information
+                </h3>
+
+                <div className="space-y-5">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">
+                      Product Name *
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      onChange={handleChange}
+                      placeholder="Enter a descriptive name"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">
+                      Description
+                    </label>
+                    <textarea
+                      name="description"
+                      onChange={handleChange}
+                      rows="4"
+                      placeholder="Write details about product features, material, etc."
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all resize-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
+                <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                  <DollarSign size={18} className="text-emerald-500" /> Pricing
+                  & Logistics
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">
+                      Price ($) *
+                    </label>
+                    <input
+                      type="number"
+                      name="price"
+                      step="0.01"
+                      onChange={handleChange}
+                      placeholder="0.00"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">
+                      SKU / Barcode *
+                    </label>
+                    <input
+                      type="text"
+                      name="SKU"
+                      onChange={handleChange}
+                      placeholder="e.g. WH-LP-2024"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        )}
 
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
-            <AlertCircle size={20} className="text-red-600" />
-            <div>
-              <p className="font-medium text-red-900">Error!</p>
-              <p className="text-sm text-red-700">{error}</p>
-            </div>
-          </div>
-        )}
+            {/* Right Column: Category & Stock */}
+            <div className="space-y-6">
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                  <Boxes size={18} className="text-orange-500" /> Inventory
+                </h3>
 
-        <div className="max-w-2xl">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Product Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    onChange={handleChange}
-                    placeholder="e.g., Laptop Computer"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    SKU <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="SKU"
-                    onChange={handleChange}
-                    placeholder="e.g., LAP-001"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  />
+                <div className="space-y-5">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">
+                      Category *
+                    </label>
+                    <select
+                      name="category"
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer"
+                    >
+                      <option value="">Select Category</option>
+                      {categories.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">
+                      Initial Quantity *
+                    </label>
+                    <input
+                      type="number"
+                      name="quantity"
+                      onChange={handleChange}
+                      placeholder="0"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Category <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="category"
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
-                  >
-                    <option value="">Select category</option>
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Quantity <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    name="quantity"
-                    onChange={handleChange}
-                    placeholder="0"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Price per Unit <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    name="price"
-                    onChange={handleChange}
-                    placeholder="0.00"
-                    step="0.01"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Low Stock Threshold <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    name="lowStockThreshold"
-                    onChange={handleChange}
-                    placeholder="10"
-                    defaultValue="10"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
+              <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-lg p-6 text-white">
+                <h3 className="text-sm font-bold mb-4 flex items-center gap-2 opacity-90">
+                  <ShieldAlert size={16} className="text-yellow-400" /> Stock
+                  Alert
+                </h3>
+                <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-2">
+                  Low Stock Threshold
                 </label>
-                <textarea
-                  name="description"
+                <input
+                  type="number"
+                  name="lowStockThreshold"
+                  defaultValue="10"
                   onChange={handleChange}
-                  placeholder="Add product description (optional)"
-                  rows="4"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/10 rounded-xl focus:ring-2 focus:ring-yellow-400/50 outline-none transition-all text-white font-bold"
                 />
+                <p className="text-[10px] text-slate-400 mt-3 italic">
+                  * System will notify you when stock falls below this number.
+                </p>
               </div>
 
-              <div className="flex gap-4 pt-4">
-                <button
-                  type="button"
-                  onClick={() => navigate("/inventory")}
-                  className="flex-1 px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
+              {/* Actions */}
+              <div className="pt-4 space-y-3">
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/30 transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
                 >
                   {loading ? (
-                    <>
-                      <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
-                      Adding...
-                    </>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <>
-                      <Plus size={18} />
-                      Add Product
+                      Create Product <Plus size={20} />
                     </>
                   )}
                 </button>
+                <button
+                  type="button"
+                  onClick={() => navigate("/inventory")}
+                  className="w-full py-4 bg-white text-slate-600 font-bold rounded-2xl border border-slate-200 hover:bg-slate-50 transition-all"
+                >
+                  Discard Changes
+                </button>
               </div>
-            </form>
-          </div>
+            </div>
+          </form>
         </div>
       </div>
     </div>

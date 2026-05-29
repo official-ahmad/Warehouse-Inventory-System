@@ -2,28 +2,27 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { LogIn } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import toast from "react-hot-toast"; // 👈 Toast import kar liya
+import toast from "react-hot-toast";
 
 export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false); // Error state ab zaroorat nahi kyunki toast handle karega
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    // Humne login function ko async handle karne ke liye await lagaya hai (standard practice)
     try {
-      const result = await login(username, password);
+      const result = await login(email, password);
 
       if (result.success) {
-        toast.success(`Welcome back, ${username}!`); // 🎉 Success Notification
+        toast.success(`Welcome back, ${result.user.firstName}!`);
         navigate("/");
       } else {
-        toast.error(result.error || "Invalid Username or Password!"); // ❌ Error Notification
+        toast.error(result.error || "Invalid email or password!");
       }
     } catch (err) {
       toast.error("Something went wrong with the server.");
@@ -45,20 +44,18 @@ export default function Login() {
           <h1 className="text-3xl font-semibold text-center text-gray-900 mb-2">
             WarehouseHub
           </h1>
-          <p className="text-center text-gray-600 mb-8">Admin Login</p>
-
-          {/* Static Red Error Box ab hata diya hai kyunki toast upar handle kar raha hai */}
+          <p className="text-center text-gray-600 mb-8">Inventory Management</p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Username
+                Email
               </label>
               <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="John"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin@example.com"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 disabled={loading}
               />
@@ -78,7 +75,7 @@ export default function Login() {
             </div>
             <button
               type="submit"
-              disabled={loading || !username || !password}
+              disabled={loading || !email || !password}
               className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
