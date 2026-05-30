@@ -8,11 +8,13 @@ import {
   Filter,
   ChevronRight,
   MoreHorizontal,
+  ArrowUpDown,
 } from "lucide-react";
 import { getAllProducts, deleteProduct } from "../api";
 import toast from "react-hot-toast";
 import TransactionModal from "../components/TransactionModal";
 import DeleteConfirmModal from "../components/DeleteConfirmModal";
+import EditProductModal from "../components/EditProductModal";
 
 export default function Inventory() {
   const [products, setProducts] = useState([]);
@@ -22,6 +24,7 @@ export default function Inventory() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
 
   const fetchProducts = async () => {
     try {
@@ -189,8 +192,15 @@ export default function Inventory() {
                                 quantity: product.quantity,
                               })
                             }
+                            className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"
+                            title="Adjust Stock"
+                          >
+                            <ArrowUpDown size={16} />
+                          </button>
+                          <button
+                            onClick={() => setEditingProduct(product)}
                             className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
-                            title="Update Stock"
+                            title="Edit Details"
                           >
                             <Edit2 size={16} />
                           </button>
@@ -241,6 +251,14 @@ export default function Inventory() {
           productName={selectedProduct.name}
           currentQuantity={selectedProduct.quantity}
           onClose={() => setSelectedProduct(null)}
+          onSuccess={fetchProducts}
+        />
+      )}
+
+      {editingProduct && (
+        <EditProductModal
+          product={editingProduct}
+          onClose={() => setEditingProduct(null)}
           onSuccess={fetchProducts}
         />
       )}

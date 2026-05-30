@@ -53,8 +53,8 @@ export default function ActivityLogs() {
 
   const filteredLogs = logs.filter(
     (log) =>
-      log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.userId?.email?.toLowerCase().includes(searchTerm.toLowerCase()),
+      (log.action || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (log.userId?.email || "").toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const formatDate = (date) => {
@@ -71,7 +71,7 @@ export default function ActivityLogs() {
   };
 
   return (
-    <div className="p-8">
+    <div className="lg:ml-64 min-h-screen bg-[#f8fafc] p-8">
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-6">
           <History className="text-blue-600" size={32} />
@@ -130,10 +130,12 @@ export default function ActivityLogs() {
                 {filteredLogs.map((log) => (
                   <tr key={log._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {log.userId?.firstName} {log.userId?.lastName}
-                      <div className="text-xs text-gray-500">
-                        {log.userId?.email}
-                      </div>
+                      {log.userId ? `${log.userId.firstName} ${log.userId.lastName}` : "System / Unknown"}
+                      {log.userId?.email && (
+                        <div className="text-xs text-gray-500">
+                          {log.userId.email}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-sm">
                       <span

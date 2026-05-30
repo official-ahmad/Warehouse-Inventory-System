@@ -6,6 +6,7 @@ import {
   AlertCircle,
   TrendingDown,
   TrendingUp,
+  Package,
 } from "lucide-react";
 import { createTransaction } from "../api";
 import toast from "react-hot-toast";
